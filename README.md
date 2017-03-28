@@ -1,3 +1,5 @@
+NOTE-MAK: --> insert container network diagram here <--
+
 NOTE-MAK: documentation is still being updated and is not complete...
 
 # Docker-Experimental
