@@ -1,0 +1,45 @@
+version: "2"
+
+services:
+
+  nginx-1:
+    container_name: dockerland-nginx-1
+    image: ${DOCKER_ACCT}/nginx/${TAG}
+    privileged: true
+    build:
+      context: .
+      dockerfile: .docker/nginx.dockerland.dockerfile
+    ports:
+      - "80"
+      - "443"
+    working_dir: /usr/src/app
+    networks:
+      dockerland-network-nginx-front-tier-sn1:
+      dockerland-network-nginx-apple-site-sn1:
+      dockerland-network-nginx-banana-site-sn1:
+      dockerland-network-nginx-splunk-sn1:
+      dockerland-network-nginx-node-sn1:
+
+  nginx-2:
+    container_name: dockerland-nginx-2
+    image: ${DOCKER_ACCT}/nginx/${TAG}
+    privileged: true
+    ports:
+      - "80"
+      - "443"
+    working_dir: /usr/src/app
+    networks:
+      dockerland-network-nginx-front-tier-sn1:
+      dockerland-network-nginx-apple-site-sn1:
+      dockerland-network-nginx-banana-site-sn1:
+      dockerland-network-nginx-splunk-sn1:
+      dockerland-network-nginx-node-sn1:
+
+networks:
+
+  # join the predefined networks
+  dockerland-network-nginx-front-tier-sn1:
+  dockerland-network-nginx-apple-site-sn1:
+  dockerland-network-nginx-banana-site-sn1:
+  dockerland-network-nginx-splunk-sn1:
+  dockerland-network-nginx-node-sn1:

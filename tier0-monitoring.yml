@@ -1,0 +1,21 @@
+version: "2"
+
+services:
+
+  scope-1:
+    container_name: dockerland-scope-1
+    image: ${DOCKER_ACCT}/scope/${TAG}
+    build:
+      context: .
+      dockerfile: .docker/scope.dockerland.dockerfile
+    ports:
+      - "4040:4040"
+    working_dir: /
+    privileged: true
+    labels:
+      - "works.weave.role=system"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:rw"
+    command:
+      - "--probe.docker"
+      - "true"

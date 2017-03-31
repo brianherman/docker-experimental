@@ -1,0 +1,226 @@
+# each service has it's own ip on the subnet
+# node container names are being resolved with nginx. having same subnet
+
+# docker.local outside_port:container inside_port
+
+# 20-bit block 
+# 172.16.0.0 - 172.31.255.255
+# 172.16.0.0/12 (255.240.0.0) 
+
+# block 0 - just gateway
+# block 1 - management and monitoring
+# block 2... - services
+# block 3... - services
+
+version: "2"
+
+services:
+
+  # ~ Image Stores ~ #
+  docker-registry-1:
+    container_name: dockerland-docker-registry-1
+    image: registry
+    ports:
+      - "9092:5000"
+
+### Continuous Integration and Delivery ###
+  jenkins-1:
+    container_name: dockerland-jenkins-1
+    image: ${DOCKER_ACCT}/jenkins/${TAG}
+    build:
+      context: .
+      dockerfile: /.docker/jenkins.dockerland.dockerfile
+    ports:
+      - "9090:8080"
+      - "50000:50000"
+
+  ansible-1:
+    container_name: dockerland-ansible-1
+    image: ${DOCKER_ACCT}/ansible/${TAG}
+    build:
+      context: .
+      dockerfile: /.docker/ansible.dockerland.dockerfile
+    ports:
+      - "9091:8080"
+
+### Logging and Monitoring ###
+  elasticsearch-1:
+    container_name: dockerland-elasticsearch-1
+    image: ${DOCKER_ACCT}/elasticsearch/${TAG}
+    build:
+      context: .
+      dockerfile: .docker/elasticsearch.dockerland.dockerfile
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    working_dir: /
+    networks:
+      dockerland-network-elk:
+        ipv4_address: 172.25.0.2
+
+  kibana-1:
+    container_name: dockerland-kibana-1
+    image: ${DOCKER_ACCT}/kibana/${TAG}
+    build:
+      context: .
+      dockerfile: .docker/kibana.dockerland.dockerfile
+    ports:
+      - "5601:5601"
+    working_dir: /
+    environment:
+      - ELASTICSEARCH_URL=http://dockerland-elasticsearch-1:9200
+    networks:
+      dockerland-network-elk:
+        ipv4_address: 172.25.0.3
+
+  logstash-1:
+    container_name: dockerland-logstash-1
+    image: ${DOCKER_ACCT}/logstash/${TAG}
+    build:
+      context: .
+      dockerfile: .docker/logstash.dockerland.dockerfile
+    ports:
+      - "500:500"
+      - "5000:5000/udp"
+    # depends_on:
+    #   - busybox-logstash-1
+    volumes_from:
+      - busybox-logstash-1:rw
+    working_dir: /
+    networks:
+      dockerland-network-elk:
+        ipv4_address: 172.25.0.4
+
+  busybox-logstash-1:
+    container_name: dockerland-busybox-logstash-1
+    image: ${DOCKER_ACCT}/busybox-logstash/${TAG}
+    build:
+      context: .
+      dockerfile: .docker/busybox-logstash.dockerland.dockerfile
+    volumes:
+      - logstash-data:/config
+    working_dir: /
+    networks:
+      dockerland-network-elk:
+        ipv4_address: 172.25.0.5
+
+  # unable to use custom dockerfile.
+  logspout-1:
+    container_name: dockerland-logspout-1
+    image: gliderlabs/logspout:latest
+    # build:
+    #   context: .
+    #   dockerfile: .docker/logspout.dockerland.dockerfile
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /
+    environment:
+      - LOGSPOUT=ignore
+      - DEBUG=true
+    ports:
+      - "90:80"
+    command: "syslog://172.25.0.4:5000"
+    networks:
+      dockerland-network-elk:
+        ipv4_address: 172.25.0.6
+
+  imagelayers-ui-1:
+    container_name: dockerland-imagelayers-ui-1
+    image: centurylink/imagelayers-ui
+    ports:
+      - "5050:5050"
+    working_dir: /
+
+  imagelayers-api-1:
+    container_name: dockerland-imagelayers-api-1
+    image: centurylink/imagelayers-api
+    ports:
+      - "5051:5050"
+    working_dir: /
+
+# FIXME-MAK: unable to build custom image.
+  swarm-visualizer-1:
+    container_name: dockerland-swarm-visualizer-1
+    image: manomarks/visualizer
+    # image: ${DOCKER_ACCT}/swarm-visualizer
+    # build:
+    #   context: .
+    #   dockerfile: .docker/swarm-visualizer.dockerland.dockerfile
+    environment:
+      - HOST=node-master
+      - PORT=8080
+    working_dir: /
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "5001:8080"
+
+  # testing central pm2 monitoring
+  pm2-1:
+    container_name: dockerland-pm2-1
+    image: ${DOCKER_ACCT}/pm2/${TAG}
+    build:
+      context: .
+      dockerfile: .docker/pm2.dockerland.dockerfile
+    ports:
+      - "3000:3000"
+    working_dir: /
+    networks:
+      dockerland-network-front-tier:
+        ipv4_address: 172.19.0.2
+
+  postgres-1:
+    container_name: dockerland-postgres-1
+    image: ${DOCKER_ACCT}/postgres/${TAG}
+    build:
+      context: .
+      dockerfile: .docker/postgres.dockerland.dockerfile
+    ports:
+      - "5432:5432"
+    working_dir: /
+    networks:
+      - dockerland-network-postgres
+
+  etcd-1:
+    container_name: dockerland-etcd-1
+    image: ${DOCKER_ACCT}/etcd/${TAG}
+    build:
+      context: .
+      dockerfile: .docker/etcd.dockerland.dockerfile
+    working_dir: /
+    networks:
+      - dockerland-network-back-tier
+
+volumes:
+  logstash-data:
+    driver: local
+
+networks:
+  dockerland-network-front-tier:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.19.0.0/16
+        gateway: 172.19.0.1
+  dockerland-network-elk:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.25.0.0/16
+        gateway: 172.25.0.1
+  dockerland-network-postgres:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.27.0.0/16
+        gateway: 172.27.0.1
+  dockerland-network-mongo:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.29.0.0/16
+        gateway: 172.29.0.1

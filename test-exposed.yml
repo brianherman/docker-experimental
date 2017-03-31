@@ -1,0 +1,44 @@
+version: "2"
+
+services:
+
+  # testing ubuntu nginx keepalived. having issues
+  # with nginx container and virtual address.
+
+  # looks like just an output error
+  # use again
+  #
+  # ip addr sh eth0
+
+  # nginx dockerfile order of events. something is affecting the other nodes.
+
+# ~ Node running the dashboard
+  # passport-1:
+  #   container_name: dockerland-passport-1
+  #   image: ${DOCKER_ACCT}/passport/${TAG}
+  #   build:
+  #     context: .
+  #     dockerfile: /.docker/passport.dockerland.dockerfile
+  #   ports:
+  #     - "6001:8080"
+  #   working_dir: /usr/src/app
+
+  node-9:
+    container_name: dockerland-banana-site-1
+    image: ${DOCKER_ACCT}/node-banana-site/${TAG}
+    build:
+      context: .
+      dockerfile: /.docker/node-banana-site.dockerland.dockerfile
+    ports:
+      - "8020:8080"
+    working_dir: /usr/src/app
+
+  node-6:
+    container_name: dockerland-apple-site-1
+    image: ${DOCKER_ACCT}/node-apple-site/${TAG}
+    build:
+      context: .
+      dockerfile: /.docker/node-apple-site.dockerland.dockerfile
+    ports:
+      - "8021:8080"
+    working_dir: /usr/src/app

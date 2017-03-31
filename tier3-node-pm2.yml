@@ -1,0 +1,56 @@
+version: "2"
+
+services:
+# ~ Basic node running pm2
+  node-1:
+    container_name: dockerland-node-1
+    image: ${DOCKER_ACCT}/node/${TAG}
+    build:
+      context: .
+      dockerfile: /.docker/node.dockerland.dockerfile
+    ports:
+      - "6001:8080"
+    volumes:
+      - node-data:/node-data-1
+    working_dir: /usr/src/app
+    networks:
+      dockerland-network-nginx-node-sn1:
+        ipv4_address: 172.37.2.1
+
+  node-2:
+    container_name: dockerland-node-2
+    image: ${DOCKER_ACCT}/node/${TAG}
+    ports:
+      - "6002:8080"
+    volumes:
+      - node-data:/node-data-2
+    working_dir: /usr/src/app
+    networks:
+      dockerland-network-nginx-node-sn1:
+        ipv4_address: 172.37.2.2
+
+  node-3:
+    container_name: dockerland-node-3
+    image: ${DOCKER_ACCT}/node/${TAG}
+    ports:
+      - "6003:8080"
+    volumes:
+      - node-data:/node-data-3
+    working_dir: /usr/src/app
+    networks:
+      dockerland-network-nginx-node-sn1:
+        ipv4_address: 172.37.2.3
+
+volumes:
+  node-data:
+    driver: local
+
+networks:
+
+  dockerland-network-nginx-node-sn1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.37.0.0/16
+        gateway: 172.37.0.1

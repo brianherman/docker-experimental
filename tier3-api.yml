@@ -1,0 +1,142 @@
+version: "2"
+
+services:
+
+  node-4:
+    container_name: dockerland-node-backend-api-1
+    image: ${DOCKER_ACCT}/node-protocolb-backend/${TAG}
+    build:
+      context: .
+      dockerfile: /.docker/node-protocolb-backend.dockerland.dockerfile
+    ports:
+      - "6004:8080"
+    working_dir: /usr/src/app
+    networks:
+      dockerland-network-protocolb-backend-tier:
+        ipv4_address: 172.23.2.1
+
+  node-5:
+    container_name: dockerland-node-middle-api-1
+    image: ${DOCKER_ACCT}/node-protocolb-middle/${TAG}
+    build:
+      context: .
+      dockerfile: /.docker/node-protocolb-middle.dockerland.dockerfile
+    ports:
+      - "6005:8080"
+    working_dir: /usr/src/app
+    networks:
+      dockerland-network-protocolb-backend-tier:
+        ipv4_address: 172.23.2.2
+
+# ~ Mongo database for the backend API ~ #
+  mongo-1:
+    container_name: dockerland-mongo-1
+    image: ${DOCKER_ACCT}/mongo/${TAG}
+    build:
+      context: .
+      dockerfile: .docker/mongo.dockerland.dockerfile
+    ports:
+      - "27017:27017"
+    volumes:
+      - ${DOCKER_VOLUME}/mongo/data/db:/data/db
+      - ${DOCKER_VOLUME}/mongo/data/configdb:/data/configdb
+    working_dir: /
+    networks:
+      dockerland-network-protocolb-backend-tier:
+        ipv4_address: 172.23.3.1
+
+# ~ Redis Cache for Middle API ~ #
+  redis-middle-api-1:
+    container_name: dockerland-redis-middle-api-1
+    image: ${DOCKER_ACCT}/redis-sentinel/${TAG}
+    build: 
+      context: .
+      dockerfile: .docker/redis-sentinel.dockerland.dockerfile
+    ports:
+      - "6387:6379"
+      - "16387:16379"
+    working_dir: /
+    networks:
+      dockerland-network-protocolb-backend-tier:
+        ipv4_address: 172.23.2.3
+
+# ~ Redis Cache for Backend API ~ #
+  redis-backend-api-1:
+    container_name: dockerland-redis-backend-api-1
+    image: ${DOCKER_ACCT}/redis-sentinel/${TAG}
+    build: 
+      context: .
+      dockerfile: .docker/redis-sentinel.dockerland.dockerfile
+    ports:
+      - "6388:6379"
+      - "16388:16379"
+    working_dir: /
+    networks:
+      dockerland-network-protocolb-backend-tier:
+        ipv4_address: 172.23.2.4
+
+# ~ Tasks Queue for redis ~ #
+# FIXME-MAK: celery environment BROKER_URL=amqp://admin:dockerland@rabbitmq-1:5672// is not being passed into running container
+# default config is amqp://guest:guest@rabbit:5672//
+  celery-1:
+    container_name: trancend-celery-1
+    image: ${DOCKER_ACCT}/celery/${TAG}
+    build: 
+      context: .
+      dockerfile: .docker/celery.dockerland.dockerfile
+    environment:
+      - BROKER_URL=amqp://guest:guest@rabbitmq-1:5672//
+      - DATABASE_HOST=postgres-1
+    depends_on: 
+      - rabbit
+      - postgres-1
+    networks:
+      dockerland-network-protocolb-backend-tier:
+
+  flower-1:
+    container_name: flower-1
+    image: ${DOCKER_ACCT}/flower/${TAG}
+    build: 
+      context: .
+      dockerfile: .docker/flower.dockerland.dockerfile
+    ports:
+      - "5555:5555"
+    depends_on:
+      - celery-1
+    networks:
+      dockerland-network-protocolb-backend-tier:
+
+# ~ RabbitMQ ~ #
+  rabbit:
+    container_name: dockerland-rabbitmq-1
+    image: rabbitmq:3.6.6-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    hostname: my-rabbit
+    ports:
+      - "15672:15672"
+    networks:
+      dockerland-network-protocolb-backend-tier:
+
+# ~ Postgres ~ #
+  postgres-1:
+    container_name: dockerland-postgres-1
+    image: postgres
+    environment:
+      - POSTGRES_DB=db
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=dockerland
+    volumes:
+      - ${DOCKER_VOLUME}/postgresql/data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+networks:
+  dockerland-network-protocolb-backend-tier:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.23.0.0/16
+        gateway: 172.23.0.1

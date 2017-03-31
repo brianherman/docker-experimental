@@ -1,0 +1,30 @@
+version: "2"
+
+services:
+  twemproxy-1:
+    container_name: dockerland-twemproxy-1
+    image: ${DOCKER_ACCT}/twemproxy/${TAG}
+    build:
+      context: .
+      dockerfile: .docker/twemproxy.dockerland.dockerfile
+    ports:
+      - "9292:9292"
+      - "22121:22121"
+    working_dir: /
+    networks:
+      dockerland-network-redis-cluster:
+        ipv4_address: 172.24.0.2
+      dockerland-network-back-tier:
+
+networks:
+  
+  # join the predefined network
+  dockerland-network-redis-cluster:
+
+  dockerland-network-back-tier:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.30.0.0/16
+        gateway: 172.30.0.1

@@ -1,0 +1,117 @@
+version: "2"
+
+services:
+
+  # ~ apple site ~ #
+  node-6:
+    container_name: dockerland-apple-site-1
+    image: ${DOCKER_ACCT}/node-apple-site/${TAG}
+    build:
+      context: .
+      dockerfile: /.docker/node-apple-site.dockerland.dockerfile
+    ports:
+      - "6006:8080"
+    working_dir: /usr/src/app
+    networks:
+      dockerland-network-nginx-apple-site-sn1:
+        ipv4_address: 172.34.2.1
+
+  node-7:
+    container_name: dockerland-apple-site-2
+    image: ${DOCKER_ACCT}/node-apple-site/${TAG}
+    build:
+      context: .
+      dockerfile: /.docker/node-apple-site.dockerland.dockerfile
+    ports:
+      - "6007:8080"
+    working_dir: /usr/src/app
+    networks:
+      dockerland-network-nginx-apple-site-sn1:
+        ipv4_address: 172.34.2.2
+
+  node-8:
+    container_name: dockerland-apple-site-3
+    image: ${DOCKER_ACCT}/node-apple-site/${TAG}
+    build:
+      context: .
+      dockerfile: /.docker/node-apple-site.dockerland.dockerfile
+    ports:
+      - "6008:8080"
+    working_dir: /usr/src/app
+    networks:
+      dockerland-network-nginx-apple-site-sn1:
+        ipv4_address: 172.34.2.3
+
+  # ~ banana site ~ #
+  node-9:
+    container_name: dockerland-banana-site-1
+    image: ${DOCKER_ACCT}/node-banana-site/${TAG}
+    build:
+      context: .
+      dockerfile: /.docker/node-banana-site.dockerland.dockerfile
+    ports:
+      - "8009:8080"
+    working_dir: /usr/src/app
+    networks:
+      dockerland-network-nginx-banana-site-sn1:
+        ipv4_address: 172.35.2.1
+
+  node-10:
+    container_name: dockerland-banana-site-2
+    image: ${DOCKER_ACCT}/node-banana-site/${TAG}
+    build:
+      context: .
+      dockerfile: /.docker/node-banana-site.dockerland.dockerfile
+    ports:
+      - "8010:8080"
+    working_dir: /usr/src/app
+    networks:
+      dockerland-network-nginx-banana-site-sn1:
+        ipv4_address: 172.35.2.2
+
+  node-11:
+    container_name: dockerland-banana-site-3
+    image: ${DOCKER_ACCT}/node-banana-site/${TAG}
+    build:
+      context: .
+      dockerfile: /.docker/node-banana-site.dockerland.dockerfile
+    ports:
+      - "8011:8080"
+    working_dir: /usr/src/app
+    networks:
+      dockerland-network-nginx-banana-site-sn1:
+        ipv4_address: 172.35.2.3
+
+networks:
+
+  dockerland-network-nginx-front-tier-sn1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.33.0.0/16
+        gateway: 172.33.0.1
+
+  dockerland-network-nginx-apple-site-sn1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.34.0.0/16
+        gateway: 172.34.0.1
+
+  dockerland-network-nginx-banana-site-sn1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.35.0.0/16
+        gateway: 172.35.0.1
+
+  dockerland-network-nginx-splunk-sn1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.36.0.0/16
+        gateway: 172.36.0.1
