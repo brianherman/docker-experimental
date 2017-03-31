@@ -1,0 +1,115 @@
+# each service has it's own ip on the subnet
+# node container names are being resolved with nginx. having same subnet
+
+# docker.local outside_port:container inside_port
+
+# 20-bit block 
+# 172.16.0.0 - 172.31.255.255
+# 172.16.0.0/12 (255.240.0.0) 
+
+# block 0 - just gateway
+# block 1 - management and monitoring
+# block 2... - services
+# block 3... - services
+
+version: "2"
+
+volumes:
+  node-data:
+    driver: local
+  logstash-data:
+    driver: local
+
+
+networks:
+  dockerland-network-front-tier:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.19.0.0/16
+        gateway: 172.19.0.1
+  dockerland-network-protocolb-backend-tier:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.23.0.0/16
+        gateway: 172.23.0.1
+  dockerland-network-redis-cluster:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.24.0.0/16
+        gateway: 172.24.0.1
+  dockerland-network-elk:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.25.0.0/16
+        gateway: 172.25.0.1
+  dockerland-network-postgres:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.27.0.0/16
+        gateway: 172.27.0.1
+  dockerland-network-node-redis:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.28.0.0/16
+        gateway: 172.28.0.1
+  dockerland-network-mongo:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.29.0.0/16
+        gateway: 172.29.0.1
+  dockerland-network-back-tier:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.30.0.0/16
+        gateway: 172.30.0.1
+  dockerland-network-nginx-front-tier-sn1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.33.0.0/16
+        gateway: 172.33.0.1
+  dockerland-network-nginx-apple-site-sn1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.34.0.0/16
+        gateway: 172.34.0.1
+  dockerland-network-nginx-banana-site-sn1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.35.0.0/16
+        gateway: 172.35.0.1
+  dockerland-network-nginx-splunk-sn1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.36.0.0/16
+        gateway: 172.36.0.1
+  dockerland-network-nginx-node-sn1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.37.0.0/16
+        gateway: 172.37.0.1

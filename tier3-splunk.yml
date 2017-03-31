@@ -1,0 +1,34 @@
+version: "2"
+
+services:
+  splunk:
+    container_name: dockerland-splunk-1
+    image: splunk/splunk:6.5.0-monitor
+    hostname: splunkenterprise
+    environment:
+      - SPLUNK_START_ARGS=--accept-license --answer-yes
+      - SPLUNK_ENABLE_LISTEN=9997
+      - SPLUNK_ADD=tcp 1514
+      - SPLUNK_USER=root
+    # volumes_from:
+    #   - vsplunk
+    volumes:
+      - /var/lib/docker/containers:/host/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "8000:8000"
+      - "9997:9997"
+      - "8088:8088"
+      - "1514:1514"
+    networks:
+      dockerland-network-nginx-splunk-sn1:
+        ipv4_address: 172.36.2.1
+
+networks:
+  dockerland-network-nginx-splunk-sn1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.36.0.0/16
+        gateway: 172.36.0.1
