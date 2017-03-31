@@ -1,0 +1,14 @@
+{
+  "name": "dockerland-forwarder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "http_forwarder.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ioredis": "^2.3.0"
+  }
+}
