@@ -1,0 +1,1 @@
+FROM	ansible/centos7-ansible:latest
